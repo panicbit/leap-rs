@@ -1,41 +1,31 @@
-use std::os::raw::c_int;
 use raw;
+use std::os::raw::c_int;
 use Vector;
 
 pub struct Hand {
-    raw: *mut raw::Hand
+    raw: *mut raw::Hand,
 }
 
 impl Hand {
     pub unsafe fn from_raw(raw: *mut raw::Hand) -> Hand {
-        Hand {
-            raw: raw
-        }
+        Hand { raw }
     }
 
     /// returned id might be negative
     pub fn id(&self) -> i32 {
-        unsafe {
-            raw::lm_hand_id(self.raw)
-        }
+        unsafe { raw::lm_hand_id(self.raw) }
     }
 
     pub fn pinch_distance(&self) -> f32 {
-        unsafe {
-            raw::lm_hand_pinch_distance(self.raw)
-        }
+        unsafe { raw::lm_hand_pinch_distance(self.raw) }
     }
 
     pub fn stabilized_palm_position(&self) -> Vector {
-        unsafe {
-            Vector::from_raw(raw::lm_hand_stabilized_palm_position(self.raw))
-        }
+        unsafe { Vector::from_raw(raw::lm_hand_stabilized_palm_position(self.raw)) }
     }
 
     pub fn direction(&self) -> Vector {
-        unsafe {
-            Vector::from_raw(raw::lm_hand_direction(self.raw))
-        }
+        unsafe { Vector::from_raw(raw::lm_hand_direction(self.raw)) }
     }
 }
 
@@ -48,35 +38,48 @@ impl Drop for Hand {
 }
 
 pub struct HandList {
-    raw: *mut raw::HandList
+    raw: *mut raw::HandList,
 }
 
 impl HandList {
     pub unsafe fn from_raw(raw: *mut raw::HandList) -> HandList {
-        HandList {
-            raw: raw
-        }
+        HandList { raw }
     }
 
     pub fn len(&self) -> usize {
-        unsafe {
-            raw::lm_hand_list_count(self.raw) as usize
-        }
+        unsafe { raw::lm_hand_list_count(self.raw) as usize }
     }
 
     pub fn is_empty(&self) -> bool {
-        unsafe {
-            raw::lm_hand_list_is_empty(self.raw)
-        }
+        unsafe { raw::lm_hand_list_is_empty(self.raw) }
     }
 
     pub fn frontmost(&self) -> Option<Hand> {
         unsafe {
             if self.is_empty() {
                 None
-            }
-            else {
+            } else {
                 Some(Hand::from_raw(raw::lm_hand_list_frontmost(self.raw)))
+            }
+        }
+    }
+
+    pub fn leftmost(&self) -> Option<Hand> {
+        unsafe {
+            if self.is_empty() {
+                None
+            } else {
+                Some(Hand::from_raw(raw::lm_hand_list_leftmost(self.raw)))
+            }
+        }
+    }
+
+    pub fn rightmost(&self) -> Option<Hand> {
+        unsafe {
+            if self.is_empty() {
+                None
+            } else {
+                Some(Hand::from_raw(raw::lm_hand_list_rightmost(self.raw)))
             }
         }
     }
@@ -84,9 +87,11 @@ impl HandList {
     pub fn get(&self, index: usize) -> Option<Hand> {
         unsafe {
             if index < self.len() {
-                Some(Hand::from_raw(raw::lm_hand_list_at(self.raw, index as c_int)))
-            }
-            else {
+                Some(Hand::from_raw(raw::lm_hand_list_at(
+                    self.raw,
+                    index as c_int,
+                )))
+            } else {
                 None
             }
         }
@@ -95,7 +100,7 @@ impl HandList {
     pub fn iter(&self) -> Iter {
         Iter {
             list: self,
-            index: 0
+            index: 0,
         }
     }
 }
@@ -110,7 +115,7 @@ impl Drop for HandList {
 
 pub struct Iter<'a> {
     list: &'a HandList,
-    index: usize
+    index: usize,
 }
 
 impl<'a> Iterator for Iter<'a> {
@@ -120,8 +125,7 @@ impl<'a> Iterator for Iter<'a> {
         if let Some(hand) = self.list.get(self.index) {
             self.index += 1;
             Some(hand)
-        }
-        else {
+        } else {
             None
         }
     }

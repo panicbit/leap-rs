@@ -1,7 +1,7 @@
 extern crate leap;
 
-use std::thread::sleep_ms;
 use leap::Controller;
+use std::thread::sleep_ms;
 
 fn main() {
     let controller = Controller::with_listener(DemoListener);
@@ -9,7 +9,6 @@ fn main() {
         // Do something else
         sleep_ms(150);
     }
-
 }
 
 struct DemoListener;
@@ -20,18 +19,43 @@ impl leap::Listener for DemoListener {
     }
 
     fn on_frame(&mut self, controller: &Controller) {
+        // Get the frame, report information
         let frame = controller.frame();
-        println!("fps = {}, pointables = {}", frame.current_fps(), frame.pointables().len());
+        println!(
+            "fps = {}, pointables = {}, fingers = {}",
+            frame.current_fps(),
+            frame.pointables().len(),
+            frame.fingers().len(),
+        );
+
+        // Report all pointables (includes fingers)
         for pointable in frame.pointables().iter() {
             let stp = pointable.stabilized_tip_position();
-            println!("[p]: id = {id}, td = {td:.1}, stp = ({x:.1}, {y:.1}, {z:.1})",
-                id = pointable.id(),
-                td = pointable.touch_distance(),
-                x = stp.x(),
-                y = stp.y(),
-                z = stp.z(),
+            println!(
+                "[p]: id = {}, td = {}, stp = ({}, {}, {})",
+                pointable.id(),
+                pointable.touch_distance(),
+                stp.x(),
+                stp.y(),
+                stp.z(),
             );
         }
+
+        // Report all fingers
+        for finger in frame.fingers().iter() {
+            let stp = finger.stabilized_tip_position();
+            println!(
+                "[f]: id = {}, type = {}, extended = {}, td = {}, stp = ({}, {}, {})",
+                finger.id(),
+                finger.type_enum(),
+                finger.is_extended(),
+                finger.touch_distance(),
+                stp.x(),
+                stp.y(),
+                stp.z(),
+            );
+        }
+
         println!("--------------------------------");
         sleep_ms(150);
     }
